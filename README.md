@@ -8,7 +8,7 @@ known as Docker.
 This means that you will need to:
 
 1. Download and install the [Docker Toolbox](https://www.docker.com/products/docker-toolbox)
-2. [](#build a docker image)
+2. [Build a docker image](#build a docker image)
 
 Before you can [](#run the image analysis in a docker container)
 
