@@ -4,9 +4,21 @@ import os
 import logging
 import argparse
 
+import numpy as np
+from skimage.morphology import disk
+
 from jicbioimage.core.image import Image
 from jicbioimage.core.transform import transformation
 from jicbioimage.core.io import AutoName, AutoWrite
+
+from jicbioimage.transform import (
+    threshold_otsu,
+    remove_small_objects,
+    invert,
+    erode_binary,
+)
+
+from jicbioimage.segment import connected_components, watershed_with_seeds
 
 __version__ = "0.0.1"
 
@@ -19,11 +31,64 @@ def identity(image):
     return image
 
 
+@transformation
+def red_channel(image):
+    """Return the red channel."""
+    return image[:, :, 0]
+
+
+@transformation
+def green_channel(image):
+    """Return the green channel."""
+    return image[:, :, 1]
+
+
+@transformation
+def blue_channel(image):
+    """Return the blue channel."""
+    return image[:, :, 2]
+
+
+@transformation
+def difference(im1, im2):
+    """Return the absolute difference."""
+    return np.abs(im1 - im2)
+
+
+@transformation
+def fill_small_holes(image, min_size):
+    aw = AutoWrite.on
+    AutoWrite.on = False
+    image = invert(image)
+    image = remove_small_objects(image, min_size=min_size)
+    image = invert(image)
+    AutoWrite.on = aw
+    return image
+
+
+def segment(image):
+    """Return field plots."""
+    red = red_channel(image)
+    green = green_channel(image)
+    image = difference(red, green)
+
+    mask = threshold_otsu(image)
+    mask = remove_small_objects(mask, min_size=1000)
+    mask = fill_small_holes(mask, min_size=100)
+
+    seeds = erode_binary(mask, selem=disk(10))
+    seeds = remove_small_objects(seeds, min_size=100)
+    seeds = connected_components(seeds, background=0)
+
+    return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+
+
 def analyse_file(fpath, output_directory):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
     image = Image.from_file(fpath)
-    image = identity(image)
+
+    plots = segment(image)
 
 
 def analyse_directory(input_directory, output_directory):
