@@ -1,5 +1,6 @@
 *.png
 *.pyc
+*.swp
 
 data/*
 output/*
