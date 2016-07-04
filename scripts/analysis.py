@@ -126,12 +126,28 @@ def annotate(image, plots):
 
     return ann
 
+def write_csv_header(fhandle):
+    line = "red,green,blue,name\n"
+    fhandle.write(line)
 
-def analyse_file(fpath, output_directory):
+def write_csv_row(image, plots, name, fhandle):
+    line = "{red:d},{green:d},{blue:d},{name}\n"
+    for i in plots.identifiers:
+        region = plots.region_by_identifier(i)
+
+        red = int(round(mean_plot_intensity(image, region, 0)))
+        green = int(round(mean_plot_intensity(image, region, 1)))
+        blue = int(round(mean_plot_intensity(image, region, 2)))
+
+        d = dict(red=red, green=green, blue=blue, name=name)
+        fhandle.write(line.format(**d))
+
+
+def analyse_file(fpath, output_directory, csv_fhandle):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
     image = Image.from_file(fpath)
-#   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
+    image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
     plots = segment(image)
     ann = annotate(image, plots)
@@ -143,13 +159,18 @@ def analyse_file(fpath, output_directory):
     with open(ann_fpath, "wb") as fh:
         fh.write(ann.png())
 
+    write_csv_row(image, plots, name, csv_fhandle)
+
 
 def analyse_directory(input_directory, output_directory):
     """Analyse all the files in a directory."""
     logging.info("Analysing files in directory: {}".format(input_directory))
-    for fname in os.listdir(input_directory):
-        fpath = os.path.join(input_directory, fname)
-        analyse_file(fpath, output_directory)
+    csv_fname = os.path.join(output_directory, "colors.csv")
+    with open(csv_fname, "w") as csv_fhandle:
+        write_csv_header(csv_fhandle)
+        for fname in os.listdir(input_directory):
+            fpath = os.path.join(input_directory, fname)
+            analyse_file(fpath, output_directory, csv_fhandle)
 
 
 def main():
@@ -184,7 +205,10 @@ def main():
 
     # Run the analysis.
     if os.path.isfile(args.input_source):
-        analyse_file(args.input_source, args.output_dir)
+        csv_fname = os.path.join(args.output_dir, "colors.csv")
+        with open(csv_fname, "w") as csv_fhandle:
+            write_csv_header(csv_fhandle)
+            analyse_file(args.input_source, args.output_dir, csv_fhandle)
     elif os.path.isdir(args.input_source):
         analyse_directory(args.input_source, args.output_dir)
     else:
