@@ -147,7 +147,7 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
     image = Image.from_file(fpath)
-    image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
+#   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
     plots = segment(image)
     ann = annotate(image, plots)
