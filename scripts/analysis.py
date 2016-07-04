@@ -16,9 +16,11 @@ from jicbioimage.transform import (
     remove_small_objects,
     invert,
     erode_binary,
+    mean_intensity_projection,
 )
 
 from jicbioimage.segment import connected_components, watershed_with_seeds
+from jicbioimage.illustrate import AnnotatedImage
 
 __version__ = "0.0.1"
 
@@ -80,15 +82,66 @@ def segment(image):
     seeds = remove_small_objects(seeds, min_size=100)
     seeds = connected_components(seeds, background=0)
 
+    return seeds
+
     return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+
+
+def mean_plot_intensity(image, region, channel):
+    """Return the mean intensity of a color channel for a plot region."""
+    ar = image[:, :, channel]
+    return float(np.mean(ar[region]))
+
+
+def annotate(image, plots):
+    """Write out an image of the field with the plots annotated."""
+    grayscale = mean_intensity_projection(image)
+    ann = AnnotatedImage.from_grayscale(grayscale)
+    for i in plots.identifiers:
+        region = plots.region_by_identifier(i)
+
+        ann[region] = image[region]
+
+        red = mean_plot_intensity(image, region, 0)
+        green = mean_plot_intensity(image, region, 1)
+        blue = mean_plot_intensity(image, region, 2)
+
+        color = (red, green, blue)
+        ann.mask_region(region.border.dilate(7), color=color)
+
+        offset = (region.centroid[0] - 60, region.centroid[1])
+        ann.text_at("R: {:5.1f}".format(red),
+                    offset,
+                    size=56,
+                    center=True)
+        ann.text_at("G: {:5.1f}".format(green),
+                    region.centroid,
+                    size=56,
+                    center=True)
+        offset = (region.centroid[0] + 60, region.centroid[1])
+        ann.text_at("B: {:5.1f}".format(blue),
+                    offset,
+                    size=56,
+                    center=True)
+
+    return ann
 
 
 def analyse_file(fpath, output_directory):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
     image = Image.from_file(fpath)
+#   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
     plots = segment(image)
+    ann = annotate(image, plots)
+
+    fname = os.path.basename(fpath)
+    name, ext = os.path.splitext(fname)
+    ann_fpath = os.path.join(output_directory, name + ".png")
+
+    with open(ann_fpath, "wb") as fh:
+        fh.write(ann.png())
 
 
 def analyse_directory(input_directory, output_directory):
