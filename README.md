@@ -44,3 +44,14 @@ Now you can run the image analysis.
 ```
 [root@048bd4bd961c /]# python scripts/analysis.py data/ output/
 ```
+
+## PCA analysis
+
+The analysis script produces a ``output/colors.csv`` file.
+To perform a pca analysis on this run the command below.
+
+```
+Rscript analsis/pca.R output/colors.csv pca.png
+```
+
+Note that this requires ``ggplot2`` and ``ggfortify`` to be installed in your R.
