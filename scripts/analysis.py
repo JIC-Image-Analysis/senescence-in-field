@@ -51,7 +51,7 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     image = Image.from_file(fpath)
 
     # Debug speed up.
-    image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
+#   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
     fname = os.path.basename(fpath)
     name, ext = os.path.splitext(fname)
