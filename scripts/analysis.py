@@ -92,8 +92,13 @@ def mean_plot_intensity(image, region, channel):
     ar = image[:, :, channel]
     return float(np.mean(ar[region]))
 
+def plot_identifier(name, plot_id):
+    """Return file,plot_id identifier."""
+    prefix, number = name.split("_")
+    return "{}-{}".format(number, plot_id)
 
-def annotate(image, plots):
+
+def annotate(image, plots, name):
     """Write out an image of the field with the plots annotated."""
     grayscale = mean_intensity_projection(image)
     ann = AnnotatedImage.from_grayscale(grayscale)
@@ -109,15 +114,23 @@ def annotate(image, plots):
         color = (red, green, blue)
         ann.mask_region(region.border.dilate(7), color=color)
 
+        offset = (region.centroid[0] - 120, region.centroid[1])
+        ann.text_at(plot_identifier(name, i),
+                    offset,
+                    size=56,
+                    center=True)
+
         offset = (region.centroid[0] - 60, region.centroid[1])
         ann.text_at("R: {:5.1f}".format(red),
                     offset,
                     size=56,
                     center=True)
+
         ann.text_at("G: {:5.1f}".format(green),
                     region.centroid,
                     size=56,
                     center=True)
+
         offset = (region.centroid[0] + 60, region.centroid[1])
         ann.text_at("B: {:5.1f}".format(blue),
                     offset,
@@ -127,19 +140,20 @@ def annotate(image, plots):
     return ann
 
 def write_csv_header(fhandle):
-    line = "red,green,blue,name\n"
+    line = "red,green,blue,name,identifier\n"
     fhandle.write(line)
 
 def write_csv_row(image, plots, name, fhandle):
-    line = "{red:d},{green:d},{blue:d},{name}\n"
+    line = "{red:d},{green:d},{blue:d},{name},{identifier}\n"
     for i in plots.identifiers:
         region = plots.region_by_identifier(i)
 
         red = int(round(mean_plot_intensity(image, region, 0)))
         green = int(round(mean_plot_intensity(image, region, 1)))
         blue = int(round(mean_plot_intensity(image, region, 2)))
+        identifier = plot_identifier(name, i)
 
-        d = dict(red=red, green=green, blue=blue, name=name)
+        d = dict(red=red, green=green, blue=blue, name=name, identifier=identifier)
         fhandle.write(line.format(**d))
 
 
@@ -149,11 +163,12 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     image = Image.from_file(fpath)
 #   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
-    plots = segment(image)
-    ann = annotate(image, plots)
-
     fname = os.path.basename(fpath)
     name, ext = os.path.splitext(fname)
+
+    plots = segment(image)
+    ann = annotate(image, plots, name)
+
     ann_fpath = os.path.join(output_directory, name + ".png")
 
     with open(ann_fpath, "wb") as fh:
