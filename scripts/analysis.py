@@ -82,8 +82,6 @@ def segment(image):
     seeds = remove_small_objects(seeds, min_size=100)
     seeds = connected_components(seeds, background=0)
 
-    return seeds
-
     return watershed_with_seeds(-image, seeds=seeds, mask=mask)
 
 
