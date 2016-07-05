@@ -9,6 +9,13 @@ from jicbioimage.transform import (
     remove_small_objects,
 )
 
+
+def plot_identifier(name, plot_id):
+    """Return file,plot_id identifier."""
+    prefix, number = name.split("_")
+    return "{}-{}".format(number, plot_id)
+
+
 def mean_plot_intensity(image, region, channel):
     """Return the mean intensity of a color channel for a plot region."""
     ar = image[:, :, channel]
