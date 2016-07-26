@@ -59,21 +59,32 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     plots = segment(image)
     plots = filter_sides(plots)
     plots = filter_touching_border(plots)
-    for i in plots.identifiers:
-        r = plots.region_by_identifier(i)
-        print(r.area)
 
+    # Experimenting...
+    import grid
+    from jicbioimage.core.util.color import pretty_color_from_identifier
+    ydim, xdim = plots.shape
+    columns = grid.grid(plots)
     ann = get_grayscale_ann(image)
-    ann = color_in_plots(ann, image, plots)
-    ann = outline_plots(ann, image, plots)
-    ann = overlay_text(ann, image, plots, name)
+    for i, c in enumerate(columns):
+        color = pretty_color_from_identifier(i)
+        for j, r in enumerate(c):
+            ann.text_at("{},{}".format(i, j), r.centroid,
+                        color=color, size=60, center=True)
+        for i in range(3):
+            ann.draw_line((0, c.x_mean - i), (ydim-1, c.x_mean - i), color)
+            ann.draw_line((0, c.x_mean + i), (ydim-1, c.x_mean + i), color)
+
+#   ann = get_grayscale_ann(image)
+#   ann = color_in_plots(ann, image, plots)
+#   ann = outline_plots(ann, image, plots)
+#   ann = overlay_text(ann, image, plots, name)
 
     ann_fpath = os.path.join(output_directory, name + ".png")
-
     with open(ann_fpath, "wb") as fh:
         fh.write(ann.png())
 
-    write_csv_row(image, plots, name, csv_fhandle)
+#   write_csv_row(image, plots, name, csv_fhandle)
 
 
 def analyse_directory(input_directory, output_directory):
