@@ -1,7 +1,9 @@
 """Module for segmenting fields into plots."""
 
+import numpy as np
 from skimage.morphology import disk
 
+from jicbioimage.core.transform import transformation
 from jicbioimage.transform import (
     threshold_otsu,
     remove_small_objects,
@@ -17,6 +19,7 @@ from utils import (
 )
 
 
+@transformation
 def segment(image):
     """Return field plots."""
     red = red_channel(image)
@@ -32,3 +35,50 @@ def segment(image):
     seeds = connected_components(seeds, background=0)
 
     return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+
+
+@transformation
+def filter_sides(segmentation):
+    """Remove hedges on left and right hand side.
+
+    Also remove anything from the edge of the hedge
+    to the closest edge of the image.
+    """
+    ydim, xdim = segmentation.shape
+    mid_point = xdim // 2
+    for i in segmentation.identifiers:
+        region = segmentation.region_by_identifier(i)
+        if region.area > 200000:
+            segmentation[region] = 0
+            y, x = [int(i) for i in region.centroid]
+            if x < mid_point:
+                # Left hand side of the hedge.
+                xlim = np.min(region.index_arrays[1])
+                # Using the identifiers in the region rather
+                # than masking the region itself avoids the
+                # issue of ending up with small cutoff left
+                # overs.
+                ids = np.unique(segmentation[0:ydim, 0:xlim])
+                for i in ids:
+                    segmentation[segmentation == i] = 0
+            else:
+                # Right hand side of the hedge.
+                xlim = np.max(region.index_arrays[1])
+                ids = np.unique(segmentation[0:ydim, xlim:xdim])
+                for i in ids:
+                    segmentation[segmentation == i] = 0
+
+    return segmentation
+
+@transformation
+def filter_touching_border(segmentation):
+    """Remove any plots touching top and bottom border of image."""
+    ydim, xdim = segmentation.shape
+    for i in segmentation.identifiers:
+        region = segmentation.region_by_identifier(i)
+        ys = region.index_arrays[0]
+        if np.min(ys) == 0:
+            segmentation[region] = 0
+        if np.max(ys) == ydim - 1:
+            segmentation[region] = 0
+    return segmentation

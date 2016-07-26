@@ -7,7 +7,7 @@ import argparse
 from jicbioimage.core.image import Image
 from jicbioimage.core.io import AutoName, AutoWrite
 
-from segment import segment
+from segment import segment, filter_sides, filter_touching_border
 from annotate import (
     get_grayscale_ann,
     color_in_plots,
@@ -57,6 +57,12 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     name, ext = os.path.splitext(fname)
 
     plots = segment(image)
+    plots = filter_sides(plots)
+    plots = filter_touching_border(plots)
+    for i in plots.identifiers:
+        r = plots.region_by_identifier(i)
+        print(r.area)
+
     ann = get_grayscale_ann(image)
     ann = color_in_plots(ann, image, plots)
     ann = outline_plots(ann, image, plots)
