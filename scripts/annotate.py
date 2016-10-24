@@ -5,10 +5,13 @@ from jicbioimage.illustrate import AnnotatedImage
 
 from utils import mean_plot_intensity, plot_identifier
 
+import numpy as np
+
+#def quick_grayscale_ann(image):
 
 def get_grayscale_ann(image):
     """Return AnnotatedImage with field in grayscale."""
-    grayscale = mean_intensity_projection(image)
+    grayscale = np.mean(image, axis=2)
     ann = AnnotatedImage.from_grayscale(grayscale)
     return ann
 
