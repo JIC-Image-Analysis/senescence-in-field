@@ -5,6 +5,21 @@ import os
 import sys
 import subprocess
 
+def build_docker_image():
+
+    # Remove old image
+
+    # Build new image
+    # docker build -t image_name path
+
+    pass
+
+def build_singularity_image():
+    pass
+
+def output_run_script():
+    pass
+
 def magic():
 
     data_root = '/data'
@@ -20,10 +35,11 @@ def magic():
         run_command = ['python', '/scripts/analysis.py', fq_data_file, '/output']
 
         print(' '.join(run_command))
+        subprocess.call(run_command)
 
 
 def main():
-    magic()
+    output_run_script()
 
 if __name__ == '__main__':
     main()

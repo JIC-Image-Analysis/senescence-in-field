@@ -4,4 +4,6 @@ RUN git clone https://github.com/JIC-Image-Analysis/senescence-in-field.git /cod
 cd /code && git checkout infrastructure-experiments && \
 ln -s /code/scripts /scripts
 
+ENV INCONTAINER=TRUE
+
 ENTRYPOINT ["/scripts/agent.py"]
