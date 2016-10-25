@@ -20,26 +20,25 @@ def build_singularity_image():
 def output_run_script():
     pass
 
-def magic():
+def run_analysis_on_files(file_list):
+    # NOTE - file_list is *container* relative
 
     data_root = '/data'
-    data_file_template = 'DJI_0{}.JPG'
 
-    start = int(sys.argv[1])
-    end = start + 5
-
-    for file_id in range(start, end):
-        data_file = data_file_template.format(file_id)
-        fq_data_file = os.path.join(data_root, data_file)
+    for filename in file_list:
+        fq_data_file = os.path.join(data_root, filename)
 
         run_command = ['python', '/scripts/analysis.py', fq_data_file, '/output']
 
         print(' '.join(run_command))
-        subprocess.call(run_command)
+        #subprocess.call(run_command)
 
 
 def main():
-    output_run_script()
+    
+    file_list = sys.argv[1:]
+
+    run_analysis_on_files(file_list)
 
 if __name__ == '__main__':
     main()
