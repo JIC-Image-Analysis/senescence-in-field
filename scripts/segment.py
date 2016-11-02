@@ -82,3 +82,24 @@ def filter_touching_border(segmentation):
         if np.max(ys) == ydim - 1:
             segmentation[region] = 0
     return segmentation
+
+@transformation
+def filter_by_size(plots):
+    """Remove plots the size of which lies outside particular min and max plot
+    sizes."""
+
+    #params = Parameters()
+    
+    identifiers = plots.identifiers
+
+    # TODO - set relative to median?
+    min_plot_size = 40000
+    max_plot_size = 80000
+
+    for identifier in identifiers:
+        region = plots.region_by_identifier(identifier)
+        size = region.area
+        if (size < min_plot_size) or (size > max_plot_size):
+            plots.remove_region(identifier)
+
+    return plots

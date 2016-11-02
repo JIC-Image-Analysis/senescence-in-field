@@ -5,6 +5,9 @@ import os
 import sys
 import subprocess
 
+class Project(object):
+    pass
+
 def build_docker_image():
 
     # Remove old image
@@ -39,7 +42,7 @@ def magic():
 
 
 def main():
-    output_run_script()
+    #output_run_script()
 
 if __name__ == '__main__':
     main()

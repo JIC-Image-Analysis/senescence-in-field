@@ -4,10 +4,22 @@ import os
 import logging
 import argparse
 
+import numpy as np
+
 from jicbioimage.core.image import Image
 from jicbioimage.core.io import AutoName, AutoWrite
+from jicbioimage.core.util.color import identifier_from_unique_color
+from jicbioimage.segment import SegmentedImage
 
-from segment import segment, filter_sides, filter_touching_border
+from jicparameters import Parameters
+
+from segment import (
+    segment, 
+    filter_sides, 
+    filter_touching_border, 
+    filter_by_size
+)
+
 from annotate import (
     get_grayscale_ann,
     color_in_plots,
@@ -45,6 +57,28 @@ def write_csv_row(image, plots, name, fhandle):
         fhandle.write(line.format(**d))
 
 
+
+def save_segmented_image_as_rgb(segmented_image, filename):
+
+    segmentation_as_rgb = segmented_image.unique_color_image
+
+    with open(filename, 'wb') as f:
+        f.write(segmentation_as_rgb.png())
+
+def load_segmentation_from_rgb_image(filename):
+
+    rgb_image = Image.from_file(filename)
+
+    ydim, xdim, _ = rgb_image.shape
+
+    segmentation = np.zeros((ydim, xdim), dtype=np.uint32)
+
+    segmentation += rgb_image[:,:,2]
+    segmentation += rgb_image[:,:,1].astype(np.uint32) * 256
+    segmentation += rgb_image[:,:,0].astype(np.uint32) * 256 * 256
+
+    return segmentation.view(SegmentedImage)
+
 def analyse_file(fpath, output_directory, csv_fhandle):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
@@ -59,6 +93,18 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     plots = segment(image) # 26s
     plots = filter_sides(plots) # +7s
     plots = filter_touching_border(plots) #+6s
+    plots = filter_by_size(plots)
+
+    segmentation_filename = os.path.join(output_directory, name + '-segmentation.png')
+    save_segmented_image_as_rgb(plots, segmentation_filename)
+
+    false_color_filename = os.path.join(output_directory, name + '-false_color.png')
+    with open(false_color_filename, 'wb') as f:
+        f.write(plots.png())
+
+    # test_output_fn = os.path.join(output_directory, 'test.png')
+    # with open(test_output_fn, 'wb') as f:
+    #     f.write(segmentation.png())
 
     # print('time to stop')
     # sys.exit(0)
@@ -78,14 +124,14 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     #         ann.draw_line((0, c.x_mean - i), (ydim-1, c.x_mean - i), color)
     #         ann.draw_line((0, c.x_mean + i), (ydim-1, c.x_mean + i), color)
 
-    ann = get_grayscale_ann(image) # + 2 min 20s / now +2s
-    ann = color_in_plots(ann, image, plots)  # +4s
-    ann = outline_plots(ann, image, plots) # +10s
-    ann = overlay_text(ann, image, plots, name) # +11s
+    # ann = get_grayscale_ann(image) # + 2 min 20s / now +2s
+    # ann = color_in_plots(ann, image, plots)  # +4s
+    # ann = outline_plots(ann, image, plots) # +10s
+    # ann = overlay_text(ann, image, plots, name) # +11s
 
-    ann_fpath = os.path.join(output_directory, name + ".png")
-    with open(ann_fpath, "wb") as fh:
-        fh.write(ann.png())
+    # ann_fpath = os.path.join(output_directory, name + ".png")
+    # with open(ann_fpath, "wb") as fh:
+    #     fh.write(ann.png())
 
 #   write_csv_row(image, plots, name, csv_fhandle)
 
