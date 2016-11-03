@@ -43,7 +43,7 @@ def run_analysis_on_data(data_to_process):
                         output_basename]
 
         print(' '.join(run_command))
-        #subprocess.call(run_command)
+        subprocess.call(run_command)
 
 def read_manifest_and_run_files():
 
@@ -63,8 +63,6 @@ def read_manifest_and_run_files():
 
 def main():
     read_manifest_and_run_files()
-
-    #run_analysis_on_files(file_list)
 
 if __name__ == '__main__':
     main()
