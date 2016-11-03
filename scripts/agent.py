@@ -3,6 +3,7 @@
 
 import os
 import sys
+import json
 import subprocess
 
 class Project(object):
@@ -23,26 +24,47 @@ def build_singularity_image():
 def output_run_script():
     pass
 
-def run_analysis_on_files(file_list):
+def run_analysis_on_data(data_to_process):
     # NOTE - file_list is *container* relative
 
     data_root = '/data'
 
-    for filename in file_list:
+    for datum in data_to_process:
+
+        filename = datum['relative_raw_path']
         fq_data_file = os.path.join(data_root, filename)
 
-        run_command = ['python', '/scripts/analysis.py', fq_data_file, '/output']
+        output_basename = datum['identifier']
+
+        run_command = [ 'python', 
+                        '/scripts/analysis.py', 
+                        fq_data_file, 
+                        '/output',
+                        output_basename]
 
         print(' '.join(run_command))
         #subprocess.call(run_command)
 
+def read_manifest_and_run_files():
+
+    manifest_path = '/project/manifest.json'
+
+    with open(manifest_path) as f:
+        manifest_data = json.load(f)
+
+    manifest_data_by_id = { datum['identifier'] : datum 
+                                for datum in manifest_data }
+
+    data_ids_to_process = sys.argv[1:]
+
+    data_to_process = [manifest_data_by_id[id] for id in data_ids_to_process]
+
+    run_analysis_on_data(data_to_process)
 
 def main():
-    #output_run_script()
-    
-    file_list = sys.argv[1:]
+    read_manifest_and_run_files()
 
-    run_analysis_on_files(file_list)
+    #run_analysis_on_files(file_list)
 
 if __name__ == '__main__':
     main()

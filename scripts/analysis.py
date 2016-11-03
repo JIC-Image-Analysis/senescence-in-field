@@ -11,7 +11,7 @@ from jicbioimage.core.io import AutoName, AutoWrite
 from jicbioimage.core.util.color import identifier_from_unique_color
 from jicbioimage.segment import SegmentedImage
 
-from jicparameters import Parameters
+#from jicparameters import Parameters
 
 from segment import (
     segment, 
@@ -79,7 +79,7 @@ def load_segmentation_from_rgb_image(filename):
 
     return segmentation.view(SegmentedImage)
 
-def analyse_file(fpath, output_directory, csv_fhandle):
+def analyse_file(fpath, output_directory, csv_fhandle, name=None):
     """Analyse a single file."""
     logging.info("Analysing file: {}".format(fpath))
     image = Image.from_file(fpath)
@@ -88,7 +88,8 @@ def analyse_file(fpath, output_directory, csv_fhandle):
 #   image = image[0:500, 0:500]  # Quicker run time for debugging purposes.
 
     fname = os.path.basename(fpath)
-    name, ext = os.path.splitext(fname)
+    if name is None:
+        name, ext = os.path.splitext(fname)
 
     plots = segment(image) # 26s
     plots = filter_sides(plots) # +7s
@@ -152,6 +153,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input_source", help="Input file/directory")
     parser.add_argument("output_dir", help="Output directory")
+    parser.add_argument("output_base_name", help="Base name for output file")
     parser.add_argument("--debug", default=False, action="store_true",
                         help="Write out intermediate images")
     args = parser.parse_args()
@@ -182,7 +184,8 @@ def main():
         csv_fname = os.path.join(args.output_dir, "colors.csv")
         with open(csv_fname, "w") as csv_fhandle:
             write_csv_header(csv_fhandle)
-            analyse_file(args.input_source, args.output_dir, csv_fhandle)
+            analyse_file(args.input_source, args.output_dir, csv_fhandle, 
+                         name=args.output_base_name)
     elif os.path.isdir(args.input_source):
         analyse_directory(args.input_source, args.output_dir)
     else:
