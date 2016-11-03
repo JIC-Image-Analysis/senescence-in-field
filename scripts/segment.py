@@ -18,6 +18,9 @@ from utils import (
     fill_small_holes,
 )
 
+@transformation
+def threshold_abs(image):
+    return image > 20
 
 @transformation
 def segment(image):
@@ -26,7 +29,8 @@ def segment(image):
     green = green_channel(image)
     image = difference(red, green)
 
-    mask = threshold_otsu(image)
+    #mask = threshold_otsu(image)
+    mask = threshold_abs(image)
     mask = remove_small_objects(mask, min_size=1000)
     mask = fill_small_holes(mask, min_size=100)
 

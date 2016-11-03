@@ -43,6 +43,9 @@ def blue_channel(image):
 @transformation
 def difference(im1, im2):
     """Return the absolute difference."""
+
+    print im1.max()
+
     return np.abs(im1 - im2)
 
 
