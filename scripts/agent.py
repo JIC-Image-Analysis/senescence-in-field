@@ -35,12 +35,12 @@ def run_analysis_on_data(data_to_process):
         fq_data_file = os.path.join(data_root, filename)
 
         output_basename = datum['identifier']
+        full_output_path = os.path.join('/output', output_basename)
 
         run_command = [ 'python', 
                         '/scripts/analysis.py', 
                         fq_data_file, 
-                        '/output',
-                        output_basename]
+                        full_output_path]
 
         print(' '.join(run_command))
         subprocess.call(run_command)

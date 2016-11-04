@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """senescence-in-field analysis."""
 
 import os
@@ -96,10 +97,10 @@ def analyse_file(fpath, output_directory, csv_fhandle, name=None):
     plots = filter_touching_border(plots) #+6s
     plots = filter_by_size(plots)
 
-    segmentation_filename = os.path.join(output_directory, name + '-segmentation.png')
+    segmentation_filename = os.path.join(output_directory, 'segmentation.png')
     save_segmented_image_as_rgb(plots, segmentation_filename)
 
-    false_color_filename = os.path.join(output_directory, name + '-false_color.png')
+    false_color_filename = os.path.join(output_directory, 'false_color.png')
     with open(false_color_filename, 'wb') as f:
         f.write(plots.png())
 
@@ -153,7 +154,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input_source", help="Input file/directory")
     parser.add_argument("output_dir", help="Output directory")
-    parser.add_argument("output_base_name", help="Base name for output file")
     parser.add_argument("--debug", default=False, action="store_true",
                         help="Write out intermediate images")
     args = parser.parse_args()
@@ -184,8 +184,7 @@ def main():
         csv_fname = os.path.join(args.output_dir, "colors.csv")
         with open(csv_fname, "w") as csv_fhandle:
             write_csv_header(csv_fhandle)
-            analyse_file(args.input_source, args.output_dir, csv_fhandle, 
-                         name=args.output_base_name)
+            analyse_file(args.input_source, args.output_dir, csv_fhandle)
     elif os.path.isdir(args.input_source):
         analyse_directory(args.input_source, args.output_dir)
     else:

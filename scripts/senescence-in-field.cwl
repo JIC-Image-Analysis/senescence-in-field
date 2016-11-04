@@ -10,8 +10,4 @@ inputs:
         type: string
         inputBinding:
             position: 2
-    output_base_name:
-        type: string
-        inputBinding:
-            position: 3
 outputs: []

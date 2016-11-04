@@ -43,6 +43,12 @@ def get_original_filenames(project_root, datum):
 
     return sanitise_filename(filename)
 
+def summarise_results(raw_data_manifest, analysis_root):
+
+    for datum in raw_data_manifest.list_of_items:
+        identifier = datum['identifier']
+        print identifier
+
 def load_manifest(project_root):
 
     manifest_filename = os.path.join(project_root, 'manifest.json')
@@ -51,6 +57,11 @@ def load_manifest(project_root):
         manifest_json = json.load(f)
 
     data = Data(manifest_json)
+
+    return data
+
+def show_files_for_a_plot():
+    # BROKEN
 
     identifiers = data.matching_condition('plot_index', 1)
 
@@ -67,10 +78,14 @@ def main():
     parser = argparse.ArgumentParser(__doc__)
 
     parser.add_argument('project_root', help='Root of project directory.')
+    parser.add_argument('analysis_name', help='Identifier for analysis.')
 
     args = parser.parse_args()
 
-    load_manifest(args.project_root)
+    manifest_data = load_manifest(args.project_root)
+
+    results_root = os.path.join(args.project_root, 'output', args.analysis_name)
+    summarise_results(manifest_data, results_root)
 
 if __name__ == "__main__":
     main()
