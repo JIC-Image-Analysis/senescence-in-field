@@ -41,10 +41,10 @@ def blue_channel(image):
 
 
 @transformation
-def difference(im1, im2):
+def abs_difference(im1, im2):
     """Return the absolute difference."""
 
-    print im1.max()
+    diff = im1.astype(np.int16) - im2.astype(np.int16)
 
     return np.abs(im1 - im2)
 

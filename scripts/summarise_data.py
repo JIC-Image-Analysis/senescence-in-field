@@ -2,6 +2,8 @@ import os
 import json
 import argparse
 
+from analysis import load_segmentation_from_rgb_image
+
 class Data(object):
 
     def __init__(self, list_of_items):
@@ -43,11 +45,19 @@ def get_original_filenames(project_root, datum):
 
     return sanitise_filename(filename)
 
+def count_segments_in_file(filename):
+
+    segmentation = load_segmentation_from_rgb_image(filename)
+
+    return segmentation.number_of_segments
+
 def summarise_results(raw_data_manifest, analysis_root):
 
     for datum in raw_data_manifest.list_of_items:
         identifier = datum['identifier']
-        print identifier
+        seg_file = os.path.join(analysis_root, identifier+'-segmentation.png')
+        n_segments = count_segments_in_file(seg_file)
+        print identifier, n_segments
 
 def load_manifest(project_root):
 

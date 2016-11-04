@@ -40,7 +40,10 @@ def run_analysis_on_data(data_to_process):
         run_command = [ 'python', 
                         '/scripts/analysis.py', 
                         fq_data_file, 
-                        full_output_path]
+                        full_output_path ]
+
+        if True:
+            run_command += [ '--debug' ]
 
         print(' '.join(run_command))
         subprocess.call(run_command)

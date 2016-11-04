@@ -2,7 +2,7 @@ import subprocess
 
 def main():
 
-    container_name = 'version1.img'
+    container_name = 'version2.img'
     container_path = '/usr/users/cbu/hartleym/mnt/cluster_home/sketchings/senescence-in-field/containers'
 
     remove_command = ['docker', 'rmi', 'packed-for-cluster']

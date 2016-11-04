@@ -8,13 +8,15 @@ from jicbioimage.transform import (
     threshold_otsu,
     remove_small_objects,
     erode_binary,
+    smooth_gaussian
 )
 from jicbioimage.segment import connected_components, watershed_with_seeds
 
 from utils import (
     red_channel,
     green_channel,
-    difference,
+    blue_channel,
+    abs_difference,
     fill_small_holes,
 )
 
@@ -23,14 +25,74 @@ def threshold_abs(image):
     return image > 20
 
 @transformation
+def median_filter(image):
+
+    from skimage.filters.rank import median
+
+    return median(image, disk(10))
+
+@transformation
+def local_entropy(image):
+    smoothed = median_filter(image)
+
+    diff = smoothed.astype(np.int16) - image.astype(np.int16)
+
+    diff[np.where(diff < 0)] = 0
+
+    return diff
+
+def normalise_array(array):
+    
+    a_min = array.min()
+    a_max = array.max()
+
+    return (array - a_min) / (a_max - a_min)
+
+def force_to_uint8(array):
+
+    normalised = normalise_array(array)
+    scaled = normalised * 255
+
+    return scaled.astype(np.uint8)
+
+@transformation
+def sklocal(image):
+
+    from skimage.filters.rank import entropy
+
+    le = entropy(image, disk(5))
+
+    return force_to_uint8(le)
+
+@transformation
+def skmean(image):
+
+    from skimage.filters.rank import mean
+
+    mean_filtered = mean(image, disk(30))
+
+    print mean_filtered.min(), mean_filtered.max()
+
+    return mean_filtered
+
+@transformation
 def segment(image):
     """Return field plots."""
     red = red_channel(image)
     green = green_channel(image)
-    image = difference(red, green)
 
-    #mask = threshold_otsu(image)
-    mask = threshold_abs(image)
+    image = sklocal(green)
+    print image.min(), image.max()
+    image = skmean(image)
+
+    #entropy = local_entropy(green)
+    #smoothed = median_filter(entropy)
+    #image = difference(blue_green, red)
+    #image = difference(green, red)
+
+    mask = threshold_otsu(image)
+
+    #mask = threshold_abs(image)
     mask = remove_small_objects(mask, min_size=1000)
     mask = fill_small_holes(mask, min_size=100)
 
