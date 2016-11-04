@@ -1,0 +1,3 @@
+input_file: /data/2016-06-28 Phantom (CAD TILLING)/DJI_0117.JPG
+output_dir: /output
+output_base_name: cwlout
