@@ -55,7 +55,7 @@ def summarise_results(raw_data_manifest, analysis_root):
 
     for datum in raw_data_manifest.list_of_items:
         identifier = datum['identifier']
-        seg_file = os.path.join(analysis_root, identifier+'-segmentation.png')
+        seg_file = os.path.join(analysis_root, identifier, 'segmentation.png')
         n_segments = count_segments_in_file(seg_file)
         print identifier, n_segments
 

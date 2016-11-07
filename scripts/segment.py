@@ -96,11 +96,13 @@ def segment(image):
     mask = remove_small_objects(mask, min_size=1000)
     mask = fill_small_holes(mask, min_size=100)
 
-    seeds = erode_binary(mask, selem=disk(10))
+    #seeds = erode_binary(mask, selem=disk(10))
+    seeds = erode_binary(mask, selem=disk(50))
     seeds = remove_small_objects(seeds, min_size=100)
     seeds = connected_components(seeds, background=0)
 
-    return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+    #return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+    return watershed_with_seeds(image, seeds=seeds, mask=mask)
 
 
 @transformation
@@ -159,8 +161,8 @@ def filter_by_size(plots):
     identifiers = plots.identifiers
 
     # TODO - set relative to median?
-    min_plot_size = 40000
-    max_plot_size = 80000
+    min_plot_size = 20000
+    max_plot_size = 120000
 
     for identifier in identifiers:
         region = plots.region_by_identifier(identifier)
