@@ -47,17 +47,21 @@ def get_original_filenames(project_root, datum):
 
 def count_segments_in_file(filename):
 
-    segmentation = load_segmentation_from_rgb_image(filename)
+    if os.path.isfile(filename):
+        segmentation = load_segmentation_from_rgb_image(filename)
 
-    return segmentation.number_of_segments
+        return segmentation.number_of_segments
+
+    return -1
 
 def summarise_results(raw_data_manifest, analysis_root):
 
     for datum in raw_data_manifest.list_of_items:
         identifier = datum['identifier']
+        plot_index = datum['plot_index']
         seg_file = os.path.join(analysis_root, identifier, 'segmentation.png')
         n_segments = count_segments_in_file(seg_file)
-        print identifier, n_segments
+        print plot_index, identifier, n_segments
 
 def load_manifest(project_root):
 
