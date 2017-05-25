@@ -1,3 +1,5 @@
+dtoolcore
+jicgeometry
 jicbioimage.core
 jicbioimage.transform
 jicbioimage.segment

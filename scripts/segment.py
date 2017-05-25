@@ -70,6 +70,7 @@ def filter_sides(segmentation):
 
     return segmentation
 
+
 @transformation
 def filter_touching_border(segmentation):
     """Remove any plots touching top and bottom border of image."""

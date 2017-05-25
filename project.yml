@@ -1,8 +1,8 @@
----
-
-version: 0.0.1
-authors:
-  - Matthew Hartley
-  - Tjelvar Olsson
-start: 2016-07-01
+authors: [Matthew Hartley, Tjelvar Olsson]
+container: senescence-in-field
+dataset_path: /Users/hartleym/data_repo/cad_tilling_2016
 end: sometime
+name: senescence-in-field
+script: explore_dataset.py
+start: 2016-07-01
+version: 0.0.1
