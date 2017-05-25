@@ -1,5 +1,10 @@
 # senescence-in-field
 
+## Scripts
+
+auto_overlay.py - create overlays to determine position in field of each image, and whether it's a JPG or not
+create_exif_overlay.py - extract GPS data from each JPG image
+
 ## Introduction
 
 This image analysis project has been setup to take advantage of a technology

@@ -56,9 +56,9 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     fname = os.path.basename(fpath)
     name, ext = os.path.splitext(fname)
 
-    plots = segment(image) # 26s
-    plots = filter_sides(plots) # +7s
-    plots = filter_touching_border(plots) #+6s
+    plots = segment(image)  # 26s
+    plots = filter_sides(plots)  # +7s
+    plots = filter_touching_border(plots)  # +6s
 
     # print('time to stop')
     # sys.exit(0)
@@ -78,10 +78,10 @@ def analyse_file(fpath, output_directory, csv_fhandle):
     #         ann.draw_line((0, c.x_mean - i), (ydim-1, c.x_mean - i), color)
     #         ann.draw_line((0, c.x_mean + i), (ydim-1, c.x_mean + i), color)
 
-    ann = get_grayscale_ann(image) # + 2 min 20s / now +2s
+    ann = get_grayscale_ann(image)  # + 2 min 20s / now +2s
     ann = color_in_plots(ann, image, plots)  # +4s
-    ann = outline_plots(ann, image, plots) # +10s
-    ann = overlay_text(ann, image, plots, name) # +11s
+    ann = outline_plots(ann, image, plots)  # +10s
+    ann = overlay_text(ann, image, plots, name)  # +11s
 
     ann_fpath = os.path.join(output_directory, name + ".png")
     with open(ann_fpath, "wb") as fh:
