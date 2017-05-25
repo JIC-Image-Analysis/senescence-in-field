@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 from skimage.morphology import disk
 
+from jicbioimage.core.io import AutoName, AutoWrite
+
 from jicbioimage.core.image import Image
 from jicbioimage.core.transform import transformation
 from jicbioimage.transform import (
@@ -26,6 +28,7 @@ from utils import (
 from segment import filter_sides, filter_touching_border
 
 from jicgeometry import Point2D
+
 
 def find_approx_plot_locs(dataset, identifier):
     corner_coords = dataset.access_overlays()["coords"][identifier]
@@ -52,12 +55,51 @@ def find_approx_plot_locs(dataset, identifier):
     return plot_locs
 
 
+def normalise_array(array):
+
+    a_min = array.min()
+    a_max = array.max()
+
+    return (array - a_min) / (a_max - a_min)
+
+
+def force_to_uint8(array):
+
+    normalised = normalise_array(array)
+    scaled = normalised * 255
+
+    return scaled.astype(np.uint8)
+
+
+@transformation
+def sklocal(image):
+
+    from skimage.filters.rank import entropy
+
+    le = entropy(image, disk(5))
+
+    return force_to_uint8(le)
+
+
+@transformation
+def skmean(image):
+
+    from skimage.filters.rank import mean
+
+    mean_filtered = mean(image, disk(30))
+
+    print mean_filtered.min(), mean_filtered.max()
+
+    return mean_filtered
+
+
 @transformation
 def segment(image, seeds=None):
     """Return field plots."""
-    red = red_channel(image)
     green = green_channel(image)
-    image = difference(red, green)
+
+    image = sklocal(green)
+    image = skmean(image)
 
     mask = threshold_otsu(image)
     mask = remove_small_objects(mask, min_size=1000)
@@ -68,7 +110,7 @@ def segment(image, seeds=None):
         seeds = remove_small_objects(seeds, min_size=100)
         seeds = connected_components(seeds, background=0)
 
-    return watershed_with_seeds(-image, seeds=seeds, mask=mask)
+    return watershed_with_seeds(image, seeds=seeds, mask=mask)
 
 
 def generate_seed_image(image, dataset, identifier):
@@ -136,10 +178,25 @@ def identifiers_where_overlay_is_true(dataset, overlay_name):
     return selected
 
 
-def explore_dataset(dataset, output_path, n=1):
-    ids_of_interest = identifiers_where_overlay_is_true(dataset, "is_jpeg")
+def identifiers_where_overlay_matches_value(dataset, overlay_name, value):
 
-    for identifier in ids_of_interest[:n]:
+    overlays = dataset.access_overlays()
+
+    selected = [identifier
+                for identifier in dataset.identifiers
+                if overlays[overlay_name][identifier] == value]
+
+    return selected
+
+
+def explore_dataset(dataset, output_path, n=1):
+    ids_of_interest = identifiers_where_overlay_matches_value(
+        dataset, 'ordering', 0
+    )
+
+    print(ids_of_interest)
+
+    for identifier in ids_of_interest:
         process_single_identifier(dataset, identifier, output_path)
 
 
@@ -149,6 +206,8 @@ def main():
     parser.add_argument('output_path', help='Output directory')
 
     args = parser.parse_args()
+
+    AutoName.directory = args.output_path
 
     dataset = DataSet.from_path(args.dataset_path)
 
