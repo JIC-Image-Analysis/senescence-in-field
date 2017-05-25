@@ -79,6 +79,13 @@ def draw_pretty_images(manifest_data, results_root):
                [1185, 183],
                [654, 300]]
 
+    for c1, c2 in zip(coords, coords2):
+        x1, y1 = c1
+        x2, y2 = c2
+        print (y2-y1), (x2-x1)
+
+    sys.exit(0)
+
     analysis = AnalysisMagic(manifest_data, results_root)
 
     color_sets = []
