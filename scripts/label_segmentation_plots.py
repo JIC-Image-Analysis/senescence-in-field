@@ -120,6 +120,30 @@ def label_plots(dataset):
     with open('/output/ann.png', 'wb') as f:
         f.write(annotated.png())
 
+    grayscale = np.mean(image, axis=2)
+    annotated2 = AnnotatedImage.from_grayscale(grayscale)
+    for sid in segmentation.identifiers:
+        region = segmentation.region_by_identifier(sid)
+        annotated2.mask_region(region.border.dilate(), [255, 255, 0])
+
+    def closest_loc_label(p):
+        dists = [(p.distance(l), l) for l in approx_plot_locs]
+
+        dists.sort()
+
+        return loc_labels[dists[0][1]]
+
+    for c in centroids:
+        label = closest_loc_label(c)
+        annotated2.text_at(
+            label,
+            rel_coords_to_image_coords(segmentation, c) - Point2D(30, 30),
+            size=60,
+            color=(0, 255, 255))
+
+    with open('/output/ann_plots.png', 'wb') as f:
+        f.write(annotated2.png())
+
 
 def main():
     parser = argparse.ArgumentParser()
