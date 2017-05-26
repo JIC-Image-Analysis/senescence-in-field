@@ -3,6 +3,7 @@ container: senescence-in-field
 dataset_path: /Users/hartleym/data_repo/cad_tilling_2016
 end: sometime
 name: senescence-in-field
-script: explore_dataset.py
+script: label_segmentation_plots.py
+test: label_plots.py
 start: 2016-07-01
 version: 0.0.1

@@ -20,9 +20,11 @@ from utils import (
     fill_small_holes,
 )
 
+
 @transformation
 def threshold_abs(image):
     return image > 20
+
 
 @transformation
 def median_filter(image):
@@ -30,6 +32,7 @@ def median_filter(image):
     from skimage.filters.rank import median
 
     return median(image, disk(10))
+
 
 @transformation
 def local_entropy(image):
@@ -41,12 +44,14 @@ def local_entropy(image):
 
     return diff
 
+
 def normalise_array(array):
-    
+
     a_min = array.min()
     a_max = array.max()
 
     return (array - a_min) / (a_max - a_min)
+
 
 def force_to_uint8(array):
 
@@ -54,6 +59,7 @@ def force_to_uint8(array):
     scaled = normalised * 255
 
     return scaled.astype(np.uint8)
+
 
 @transformation
 def sklocal(image):
@@ -63,6 +69,7 @@ def sklocal(image):
     le = entropy(image, disk(5))
 
     return force_to_uint8(le)
+
 
 @transformation
 def skmean(image):
@@ -74,6 +81,7 @@ def skmean(image):
     print mean_filtered.min(), mean_filtered.max()
 
     return mean_filtered
+
 
 @transformation
 def segment(image):

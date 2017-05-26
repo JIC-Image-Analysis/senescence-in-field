@@ -94,6 +94,15 @@ def skmean(image):
 
 
 @transformation
+def distance_transform(image):
+    from skimage.morphology import medial_axis
+
+    _, dist = medial_axis(image, return_distance=True)
+
+    return dist
+
+
+@transformation
 def segment(image, seeds=None):
     """Return field plots."""
     green = green_channel(image)
@@ -104,6 +113,7 @@ def segment(image, seeds=None):
     mask = threshold_otsu(image)
     mask = remove_small_objects(mask, min_size=1000)
     mask = fill_small_holes(mask, min_size=100)
+    dist = distance_transform(mask)
 
     if seeds is None:
         seeds = erode_binary(mask, selem=disk(10))
@@ -111,6 +121,28 @@ def segment(image, seeds=None):
         seeds = connected_components(seeds, background=0)
 
     return watershed_with_seeds(image, seeds=seeds, mask=mask)
+
+
+@transformation
+def filter_by_size(plots):
+    """Remove plots the size of which lies outside particular min and max plot
+    sizes."""
+
+    # params = Parameters()
+
+    identifiers = plots.identifiers
+
+    # TODO - set relative to median?
+    min_plot_size = 20000
+    max_plot_size = 120000
+
+    for identifier in identifiers:
+        region = plots.region_by_identifier(identifier)
+        size = region.area
+        if (size < min_plot_size) or (size > max_plot_size):
+            plots.remove_region(identifier)
+
+    return plots
 
 
 def generate_seed_image(image, dataset, identifier):
@@ -145,6 +177,14 @@ def generate_output_filename(dataset, identifier, output_path, suffix=""):
     return full_output_filename
 
 
+def save_segmented_image_as_rgb(segmented_image, filename):
+
+    segmentation_as_rgb = segmented_image.unique_color_image
+
+    with open(filename, 'wb') as f:
+        f.write(segmentation_as_rgb.png())
+
+
 def process_single_identifier(dataset, identifier, output_path):
 
     print("Processing {}".format(identifier))
@@ -163,7 +203,15 @@ def process_single_identifier(dataset, identifier, output_path):
         output_path,
         '-segmented'
     )
-    with open(output_filename, 'wb') as fh:
+    save_segmented_image_as_rgb(segmentation, output_filename)
+
+    false_colour_filename = generate_output_filename(
+        dataset,
+        identifier,
+        output_path,
+        '-false_colour'
+    )
+    with open(false_colour_filename, 'wb') as fh:
         fh.write(segmentation.png())
 
 
@@ -191,12 +239,12 @@ def identifiers_where_overlay_matches_value(dataset, overlay_name, value):
 
 def explore_dataset(dataset, output_path, n=1):
     ids_of_interest = identifiers_where_overlay_matches_value(
-        dataset, 'ordering', 0
+        dataset, 'ordering', 1
     )
 
     print(ids_of_interest)
 
-    for identifier in ids_of_interest:
+    for identifier in ids_of_interest[:n]:
         process_single_identifier(dataset, identifier, output_path)
 
 
