@@ -162,21 +162,6 @@ def generate_seed_image(image, dataset, identifier):
     return seeds
 
 
-def generate_output_filename(dataset, identifier, output_path, suffix=""):
-
-    output_basename = os.path.basename(
-        dataset.abspath_from_identifier(identifier)
-    )
-
-    name, ext = os.path.splitext(output_basename)
-
-    output_filename = name + suffix + ext
-
-    full_output_filename = os.path.join(output_path, output_filename)
-
-    return full_output_filename
-
-
 def save_segmented_image_as_rgb(segmented_image, filename):
 
     segmentation_as_rgb = segmented_image.unique_color_image
@@ -185,7 +170,7 @@ def save_segmented_image_as_rgb(segmented_image, filename):
         f.write(segmentation_as_rgb.png())
 
 
-def segment_single_identifier(dataset, identifier, output_path):
+def segment_single_identifier(dataset, identifier, output_directory):
 
     image = Image.from_file(dataset.abspath_from_identifier(identifier))
 
@@ -195,20 +180,10 @@ def segment_single_identifier(dataset, identifier, output_path):
     segmentation = filter_sides(segmentation)
     segmentation = filter_touching_border(segmentation)
 
-    output_filename = generate_output_filename(
-        dataset,
-        identifier,
-        output_path,
-        '-segmented'
-    )
+    output_filename = os.path.join(output_directory, 'segmentation.png')
     save_segmented_image_as_rgb(segmentation, output_filename)
 
-    false_colour_filename = generate_output_filename(
-        dataset,
-        identifier,
-        output_path,
-        '-false_colour'
-    )
+    false_colour_filename = os.path.join(output_directory, 'false_color.png')
     with open(false_colour_filename, 'wb') as fh:
         fh.write(segmentation.png())
 
@@ -218,14 +193,14 @@ def main():
     parser.add_argument('--dataset-path', help='Path to dataset')
     parser.add_argument('--identifier', help='Identifier (hash) to process')
     parser.add_argument(
-        '--output-path',
+        '--output-directory',
         help='Root path in which to create output files')
 
     args = parser.parse_args()
 
     dataset = DataSet.from_path(args.dataset_path)
 
-    segment_single_identifier(dataset, args.identifier, args.output_path)
+    segment_single_identifier(dataset, args.identifier, args.output_directory)
 
 
 if __name__ == '__main__':
