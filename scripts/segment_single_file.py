@@ -237,7 +237,11 @@ def main():
 
             relpath = os.path.join(useful_name, filename)
 
+            coords_value = dataset.get_overlay("coords")[args.identifier]
+
             output_dataset.put_item(src_abspath, relpath)
+            output_dataset.add_item_metadata(relpath, 'from', args.identifier)
+            output_dataset.add_item_metadata(relpath, 'coords', coords_value)
 
 
 if __name__ == '__main__':
