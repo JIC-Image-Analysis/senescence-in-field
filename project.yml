@@ -1,9 +1,11 @@
 authors: [Matthew Hartley, Tjelvar Olsson]
 container: senescence-in-field
-dataset_path: /Users/hartleym/data_repo/cad_tilling_2016
+input_dataset: disk:/Users/hartleym/data_raw/cad_tilling_2016
+output_dataset: disk:/Users/hartleym/data_intermediate/test_senescence_intermediate
+sample_identifier: d65fd58712a71b1cbd67ae0b6fc2eb51355190bc
 end: sometime
 name: senescence-in-field
 script: segment_single_file.py
-test: label_plots.py
 start: 2016-07-01
+test: label_plots.py
 version: 0.0.1
