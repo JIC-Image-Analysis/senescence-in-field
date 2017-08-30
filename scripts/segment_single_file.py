@@ -1,6 +1,10 @@
 
 import os
+import shutil
 import argparse
+import tempfile
+
+from contextlib import contextmanager
 
 import numpy as np
 from skimage.morphology import disk
@@ -16,7 +20,7 @@ from jicbioimage.transform import (
 )
 from jicbioimage.segment import connected_components, watershed_with_seeds
 
-from dtoolcore import DataSet
+from dtoolcore import DataSet, ProtoDataSet
 
 from utils import (
     red_channel,
@@ -29,9 +33,21 @@ from segment import filter_sides, filter_touching_border
 
 from jicgeometry import Point2D
 
+TMPDIR_PREFIX = '/tmp'
+
+
+@contextmanager
+def temp_working_dir():
+    working_dir = tempfile.mkdtemp(prefix=TMPDIR_PREFIX)
+
+    try:
+        yield working_dir
+    finally:
+        shutil.rmtree(working_dir)
+
 
 def find_approx_plot_locs(dataset, identifier):
-    corner_coords = dataset.access_overlays()["coords"][identifier]
+    corner_coords = dataset.get_overlay("coords")[identifier]
 
     def coords_to_point2d(coords):
         x = float(coords['x'])
@@ -170,9 +186,11 @@ def save_segmented_image_as_rgb(segmented_image, filename):
         f.write(segmentation_as_rgb.png())
 
 
-def segment_single_identifier(dataset, identifier, output_directory):
+def segment_single_identifier(dataset, identifier, working_dir):
 
-    image = Image.from_file(dataset.abspath_from_identifier(identifier))
+    fpath = dataset.item_content_abspath(identifier)
+
+    image = Image.from_file(fpath)
 
     seeds = generate_seed_image(image, dataset, identifier)
 
@@ -180,27 +198,46 @@ def segment_single_identifier(dataset, identifier, output_directory):
     segmentation = filter_sides(segmentation)
     segmentation = filter_touching_border(segmentation)
 
-    output_filename = os.path.join(output_directory, 'segmentation.png')
+    output_filename = os.path.join(working_dir, 'segmentation.png')
     save_segmented_image_as_rgb(segmentation, output_filename)
 
-    false_colour_filename = os.path.join(output_directory, 'false_color.png')
+    false_colour_filename = os.path.join(working_dir, 'false_color.png')
     with open(false_colour_filename, 'wb') as fh:
         fh.write(segmentation.png())
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset-path', help='Path to dataset')
+    parser.add_argument('--dataset-uri', help='Dataset URI')
     parser.add_argument('--identifier', help='Identifier (hash) to process')
     parser.add_argument(
-        '--output-directory',
-        help='Root path in which to create output files')
+        '--output-uri',
+        help='Output dataset uri'
+    )
 
     args = parser.parse_args()
 
-    dataset = DataSet.from_path(args.dataset_path)
+    dataset = DataSet.from_uri(args.dataset_uri)
+    output_dataset = ProtoDataSet.from_uri(args.output_uri)
 
-    segment_single_identifier(dataset, args.identifier, args.output_directory)
+    with temp_working_dir() as working_dir:
+
+        segment_single_identifier(
+            dataset,
+            args.identifier,
+            working_dir
+        )
+
+        filename_list = ['segmentation.png', 'false_color.png']
+
+        for filename in filename_list:
+            src_abspath = os.path.join(working_dir, filename)
+
+            useful_name = dataset.get_overlay('useful_name')[args.identifier]
+
+            relpath = os.path.join(useful_name, filename)
+
+            output_dataset.put_item(src_abspath, relpath)
 
 
 if __name__ == '__main__':
