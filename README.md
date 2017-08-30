@@ -2,8 +2,11 @@
 
 ## Scripts
 
-auto_overlay.py - create overlays to determine position in field of each image, and whether it's a JPG or not
-create_exif_overlay.py - extract GPS data from each JPG image
+* analysis.py - DEPRECATED analysis script
+* segment_single_file.py - PRIMARY dataset-aware tool to segment a single file
+* separate_plots.py - PRIMARY dataset-aware tool to generate individual images for each plot
+* auto_overlay.py - create overlays to determine position in field of each image, and whether it's a JPG or not
+* create_exif_overlay.py - extract GPS data from each JPG image
 
 ## Introduction
 
