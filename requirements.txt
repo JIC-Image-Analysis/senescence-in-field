@@ -1,4 +1,4 @@
-dtoolcore
+git+git://github.com/jic-dtool/dtoolcore
 jicgeometry
 jicbioimage.core
 jicbioimage.transform
