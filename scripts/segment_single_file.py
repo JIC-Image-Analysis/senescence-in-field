@@ -33,7 +33,7 @@ from segment import filter_sides, filter_touching_border
 
 from jicgeometry import Point2D
 
-TMPDIR_PREFIX = '/tmp'
+TMPDIR_PREFIX = '/tmp/tmp'
 
 
 @contextmanager
