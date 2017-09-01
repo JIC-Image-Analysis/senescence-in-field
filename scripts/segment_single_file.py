@@ -205,6 +205,98 @@ def segment_single_identifier(dataset, identifier, working_dir):
     with open(false_colour_filename, 'wb') as fh:
         fh.write(segmentation.png())
 
+    segmentation_output = ('segmentation.png', {'type': 'segmentation'})
+    false_colour_output = ('false_color.png', {'type': 'false_color'})
+
+    return [segmentation_output, false_colour_output]
+
+
+def stage_outputs(
+    outputs,
+    working_dir,
+    dataset,
+    output_dataset,
+    overlays_to_copy,
+    identifier
+):
+
+    for filename, metadata in outputs:
+        src_abspath = os.path.join(working_dir, filename)
+        useful_name = dataset.get_overlay('useful_name')[identifier]
+        relpath = os.path.join(useful_name, filename)
+        output_dataset.put_item(src_abspath, relpath)
+
+        # Add 'from' overlay
+        output_dataset.add_item_metadata(relpath, 'from', identifier)
+
+        # Copy overlays
+        for overlay_name in overlays_to_copy:
+            value = dataset.get_overlay(overlay_name)[identifier]
+            output_dataset.add_item_metadata(relpath, overlay_name, value)
+
+        # Add extra metadata
+        for k, v in metadata.items():
+            output_dataset.add_item_metadata(relpath, k, v)
+
+
+class SmartTool(object):
+
+    def __init__(self):
+        parser = argparse.ArgumentParser()
+
+        parser.add_argument(
+            '-d',
+            '--dataset-uri',
+            help='URI of input dataset'
+        )
+        parser.add_argument(
+            '-i',
+            '--identifier',
+            help='Identifier to process'
+        )
+        parser.add_argument(
+            '-o',
+            '--output-dataset-uri',
+            help='URI of output dataset'
+        )
+
+        args = parser.parse_args()
+
+        self.input_dataset = DataSet.from_uri(args.dataset_uri)
+        self.output_dataset = ProtoDataSet.from_uri(args.output_dataset_uri)
+
+        self.identifier = args.identifier
+
+    def stage_outputs(self, working_directory):
+        for filename in self.outputs:
+
+            useful_name = self.input_dataset.access_overlay(
+                'useful_name'
+            )[self.identifier]
+
+            fpath = os.path.join(working_directory, filename)
+            relpath = os.path.join(useful_name, filename)
+            out_id = self.output_dataset.put_item(fpath, relpath)
+            self.output_dataset.add_item_metadata(
+                out_id,
+                'from',
+                "{}/{}".format(self.input_dataset.uuid, self.identifier)
+                )
+
+    def run(self):
+        input_file_path = self.input_dataset.item_contents_abspath(
+            self.identifier
+        )
+
+        with temp_working_dir() as working_directory:
+            runner = DockerAssist(self.container, self.command_string)
+            runner.add_volume_mount(input_file_path, '/input1')
+            runner.add_volume_mount(working_directory, '/output')
+
+            runner.run()
+
+            self.stage_outputs(working_directory)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -222,26 +314,22 @@ def main():
 
     with temp_working_dir() as working_dir:
 
-        segment_single_identifier(
+        outputs = segment_single_identifier(
             dataset,
             args.identifier,
             working_dir
         )
 
-        filename_list = ['segmentation.png', 'false_color.png']
+        overlays_to_copy = ['coords', 'ordering', 'useful_name']
 
-        for filename in filename_list:
-            src_abspath = os.path.join(working_dir, filename)
-
-            useful_name = dataset.get_overlay('useful_name')[args.identifier]
-
-            relpath = os.path.join(useful_name, filename)
-
-            coords_value = dataset.get_overlay("coords")[args.identifier]
-
-            output_dataset.put_item(src_abspath, relpath)
-            output_dataset.add_item_metadata(relpath, 'from', args.identifier)
-            output_dataset.add_item_metadata(relpath, 'coords', coords_value)
+        stage_outputs(
+            outputs,
+            working_dir,
+            dataset,
+            output_dataset,
+            overlays_to_copy,
+            args.identifier
+        )
 
 
 if __name__ == '__main__':
