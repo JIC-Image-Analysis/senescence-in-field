@@ -93,16 +93,12 @@ def image_coords_to_rel_coords(image, point):
     return Point2D(x_rel, y_rel)
 
 
-def separate_plots(dataset, identifier, resource_dataset, working_dir):
-
-    fpath = dataset.item_content_abspath(identifier)
-    segmentation = load_segmentation_from_rgb_image(fpath)
-
-    original_id = dataset.get_overlay('from')[identifier]
-    original_fpath = resource_dataset.item_content_abspath(original_id)
-    original_image = Image.from_file(original_fpath)
-
-    approx_plot_locs = find_approx_plot_locs(dataset, identifier)
+def generate_segmentation_identifier_to_label_map(
+    approx_plot_locs,
+    segmentation
+):
+    """Generate dictionary mapping segmentation identifiers to numberical id
+    of plot in field. This id should be consistent across images."""
 
     loc_labels = {l: str(n) for n, l in enumerate(approx_plot_locs)}
 
@@ -119,6 +115,25 @@ def separate_plots(dataset, identifier, resource_dataset, working_dir):
         c = segmentation.region_by_identifier(sid).centroid
         c_rel = image_coords_to_rel_coords(segmentation, c)
         sid_to_label[sid] = closest_loc_label(c_rel)
+
+    return sid_to_label
+
+
+def separate_plots(dataset, identifier, resource_dataset, working_dir):
+
+    fpath = dataset.item_content_abspath(identifier)
+    segmentation = load_segmentation_from_rgb_image(fpath)
+
+    original_id = dataset.get_overlay('from')[identifier]
+    original_fpath = resource_dataset.item_content_abspath(original_id)
+    original_image = Image.from_file(original_fpath)
+
+    approx_plot_locs = find_approx_plot_locs(dataset, identifier)
+
+    sid_to_label = generate_segmentation_identifier_to_label_map(
+        approx_plot_locs,
+        segmentation
+    )
 
     for identifier in segmentation.identifiers:
 
