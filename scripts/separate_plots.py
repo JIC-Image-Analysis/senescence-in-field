@@ -135,6 +135,8 @@ def separate_plots(dataset, identifier, resource_dataset, working_dir):
         segmentation
     )
 
+    outputs = []
+
     for identifier in segmentation.identifiers:
 
         image_section = generate_region_image(
@@ -143,12 +145,42 @@ def separate_plots(dataset, identifier, resource_dataset, working_dir):
             identifier
         )
 
-        output_fpath = os.path.join(
-            working_dir,
-            'region_{}.png'.format(sid_to_label[identifier])
-        )
+        fname = 'region_{}.png'.format(sid_to_label[identifier])
+        output_fpath = os.path.join(working_dir, fname)
 
         imsave(output_fpath, image_section)
+
+        outputs.append((fname, {'plot_number': sid_to_label[identifier]}))
+
+    return outputs
+
+
+def stage_outputs(
+    outputs,
+    working_dir,
+    dataset,
+    output_dataset,
+    overlays_to_copy,
+    identifier
+):
+
+    for filename, metadata in outputs:
+        src_abspath = os.path.join(working_dir, filename)
+        useful_name = dataset.get_overlay('useful_name')[identifier]
+        relpath = os.path.join(useful_name, filename)
+        output_dataset.put_item(src_abspath, relpath)
+
+        # Add 'from' overlay
+        output_dataset.add_item_metadata(relpath, 'from', identifier)
+
+        # Copy overlays
+        for overlay_name in overlays_to_copy:
+            value = dataset.get_overlay(overlay_name)[identifier]
+            output_dataset.add_item_metadata(relpath, overlay_name, value)
+
+        # Add extra metadata
+        for k, v in metadata.items():
+            output_dataset.add_item_metadata(relpath, k, v)
 
 
 def main():
@@ -165,23 +197,37 @@ def main():
     output_dataset = ProtoDataSet.from_uri(args.output_uri)
 
     with temp_working_dir() as working_dir:
-        separate_plots(dataset, args.identifier, resource_dataset, working_dir)
+        outputs = separate_plots(
+            dataset,
+            args.identifier,
+            resource_dataset,
+            working_dir
+        )
 
-        filename_list = os.listdir(working_dir)
+        overlays_to_copy = ['ordering']
 
-        for filename in filename_list:
-            src_abspath = os.path.join(working_dir, filename)
+        stage_outputs(
+            outputs,
+            working_dir,
+            dataset,
+            output_dataset,
+            overlays_to_copy,
+            args.identifier
+        )
 
-            # useful_name = dataset.get_overlay('useful_name')[args.identifier]
+        # filename_list = os.listdir(working_dir)
 
-            useful_name = 'a'
-            relpath = os.path.join(useful_name, filename)
+        # for filename in filename_list:
+        #     src_abspath = os.path.join(working_dir, filename)
 
-            # coords_value = dataset.get_overlay("coords")[args.identifier]
+        #     useful_name = dataset.get_overlay('useful_name')[args.identifier]
+        #     relpath = os.path.join(useful_name, filename)
 
-            output_dataset.put_item(src_abspath, relpath)
-            # output_dataset.add_item_metadata(relpath, 'from', args.identifier)
-            # output_dataset.add_item_metadata(relpath, 'coords', coords_value)
+        #     # coords_value = dataset.get_overlay("coords")[args.identifier]
+
+        #     output_dataset.put_item(src_abspath, relpath)
+        #     # output_dataset.add_item_metadata(relpath, 'from', args.identifier)
+        #     # output_dataset.add_item_metadata(relpath, 'coords', coords_value)
 
 
 if __name__ == '__main__':
