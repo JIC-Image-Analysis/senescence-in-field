@@ -67,7 +67,7 @@ def explore_plot_indexing(dataset):
 
     complete_sets = [k for k, v in indexed_by_label.items() if len(v) == 5]
 
-    test_label = complete_sets[0]
+    test_label = complete_sets[5]
 
     generate_plots_image(dataset, indexed_by_label[test_label])
 

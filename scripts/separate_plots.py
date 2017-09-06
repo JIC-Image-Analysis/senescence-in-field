@@ -204,7 +204,7 @@ def main():
             working_dir
         )
 
-        overlays_to_copy = ['ordering']
+        overlays_to_copy = ['ordering', 'date']
 
         stage_outputs(
             outputs,
@@ -214,21 +214,6 @@ def main():
             overlays_to_copy,
             args.identifier
         )
-
-        # filename_list = os.listdir(working_dir)
-
-        # for filename in filename_list:
-        #     src_abspath = os.path.join(working_dir, filename)
-
-        #     useful_name = dataset.get_overlay('useful_name')[args.identifier]
-        #     relpath = os.path.join(useful_name, filename)
-
-        #     # coords_value = dataset.get_overlay("coords")[args.identifier]
-
-        #     output_dataset.put_item(src_abspath, relpath)
-        #     # output_dataset.add_item_metadata(relpath, 'from', args.identifier)
-        #     # output_dataset.add_item_metadata(relpath, 'coords', coords_value)
-
 
 if __name__ == '__main__':
     main()
