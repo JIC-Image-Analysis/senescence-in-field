@@ -82,6 +82,20 @@ def generate_plots_image(dataset, dates_to_identifiers):
     return output_image
 
 
+def generate_plot_image_list(dataset, dates_to_identifiers):
+
+    images = []
+    sorted_dates = sorted(dates_to_identifiers)
+
+    for date in sorted_dates:
+        identifier = dates_to_identifiers[date]
+        image_abspath = dataset.item_content_abspath(identifier)
+        image = Image.from_file(image_abspath)
+        images.append(image)
+
+    return images
+
+
 def index_plots_by_label(dataset):
     """Return dictionary of dictionaries such that all plots are indexed by
     a unique label, and then by date, so any individual plot is:
@@ -107,6 +121,39 @@ def index_plots_by_label(dataset):
     return indexed_by_label
 
 
+def arrange_in_grid(image_series):
+
+    n_rows = len(image_series)
+    n_cols = len(image_series[0])
+
+    x_dims = []
+    y_dims = []
+    for row in image_series:
+        for image in row:
+            x_dim, y_dim, _ = image.shape
+            x_dims.append(x_dim)
+            y_dims.append(y_dim)
+
+    xmax = max(x_dims)
+    ymax = max(y_dims)
+
+    output_x_dim = max(x_dims) * n_rows
+    output_y_dim = max(y_dims) * n_cols
+
+    output_image = np.zeros((output_x_dim, output_y_dim, 3), dtype=np.uint8)
+
+    x_offset = 0
+    for row in image_series:
+        y_offset = 0
+        for image in row:
+            i_xdim, i_ydim, _ = image.shape
+            output_image[x_offset:x_offset+i_xdim, y_offset:i_ydim+y_offset] = image
+            y_offset = y_offset + ymax
+        x_offset = x_offset + xmax
+
+    return output_image.view(Image)
+
+
 def explore_plot_indexing(dataset, working_dir):
 
     indexed_by_label = index_plots_by_label(dataset)
@@ -115,12 +162,14 @@ def explore_plot_indexing(dataset, working_dir):
 
     sample_labels = random.sample(complete_sets, 10)
 
-    time_progression_images = [
-        generate_plots_image(dataset, indexed_by_label[l])
+    time_progression_image_series = [
+        generate_plot_image_list(dataset, indexed_by_label[l])
         for l in sample_labels
     ]
 
-    joined_image = join_vertically(time_progression_images)
+    joined_image = arrange_in_grid(time_progression_image_series)
+
+    # joined_image = join_vertically(time_progression_images)
 
     output_fpath = os.path.join(working_dir, 'joined.png')
     with open(output_fpath, 'wb') as fh:
