@@ -4,3 +4,5 @@
 
 data/*
 output/*
+.DS_Store
+.Rhistory
