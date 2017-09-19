@@ -115,14 +115,6 @@ def main(results_file):
         if date_overlay[i] == date
     }
 
-
-    # ids_of_interest = [label_to_id[s[1]] for s in selected[10:20]]
-
-    # print(ids_of_interest)
-
-    # print(dataset.item_content_abspath(label_to_id[label1]))
-    # print(dataset.item_content_abspath(label_to_id[label2]))
-
     young_plots = ['55_24', '50_14', '54_18', '16_9', '47_14']
     old_plots = ['8_6', '49_6', '29_17', '9_6', '21_1']
 

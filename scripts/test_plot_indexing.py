@@ -57,6 +57,31 @@ def generate_plot_image_list(dataset, dates_to_identifiers):
     return images
 
 
+def generate_tidy_data_table(dataset, working_dir):
+
+    indexed_by_label = index_plots_by_label(dataset)
+
+    complete_sets = [k for k, v in indexed_by_label.items() if len(v) == 5]
+
+    # sample_labels = complete_sets[0:100]
+    sample_labels = complete_sets
+
+    output_fpath = os.path.join(working_dir, 'plot_colours.csv')
+    with open(output_fpath, 'w') as fh:
+        headers = ['plot', 'date', 'R', 'G', 'B']
+        fh.write(','.join(headers) + '\n')
+        for label in sample_labels:
+            dates_to_identifiers = indexed_by_label[label]
+            for date, identifier in dates_to_identifiers.items():
+                image_abspath = dataset.item_content_abspath(identifier)
+                image = Image.from_file(image_abspath)
+                R, G, B = np.median(image, axis=[0, 1])
+                items = [str(i) for i in [label, date, R, G, B]]
+                fh.write(','.join(items) + '\n')
+
+    return [('plot_colours.csv', {})]
+
+
 def index_plots_by_label(dataset):
     """Return dictionary of dictionaries such that all plots are indexed by
     a unique label, and then by date, so any individual plot is:
@@ -181,7 +206,8 @@ def main():
     output_dataset = dtoolcore.ProtoDataSet.from_uri(output_uri)
 
     with temp_working_dir() as working_dir:
-        outputs = explore_plot_indexing(dataset, working_dir)
+        # outputs = explore_plot_indexing(dataset, working_dir)
+        outputs = generate_tidy_data_table(dataset, working_dir)
         # outputs = test_plot_colour_summary(dataset, working_dir)
         stage_outputs(
             outputs,
