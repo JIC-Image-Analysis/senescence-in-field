@@ -3,10 +3,14 @@
 ## Scripts
 
 * analysis.py - DEPRECATED analysis script
+* auto_overlay.py - Generate ordering and date overlays for plot images
 * segment_single_file.py - PRIMARY dataset-aware tool to segment a single file
-* separate_plots.py - PRIMARY dataset-aware tool to generate individual images for each plot
+* separate_plots.py - PRIMARY dataset-aware tool to generate individual images for each plot by using segmentation to split original image into component parts
 * auto_overlay.py - create overlays to determine position in field of each image, and whether it's a JPG or not
 * create_exif_overlay.py - extract GPS data from each JPG image
+* create_pca_component_overlay.py - use output CSV file to generate PCA components for each image and create overlay from this
+* tile_images.py - create tiled plots from multiple individual images
+* translate_labels.py - convert labelling of plots between this pipeline's internal labelleling and field measurement labelleling
 
 ## Introduction
 
@@ -63,3 +67,8 @@ Rscript analsis/pca.R output/colors.csv pca.png
 ```
 
 Note that this requires ``ggplot2`` and ``ggfortify`` to be installed in your R.
+
+
+## Manual scoring
+
+Original raw data - ``Senescence\ scoring\ done\ by\ Tobin\ 2016.xlsx`
